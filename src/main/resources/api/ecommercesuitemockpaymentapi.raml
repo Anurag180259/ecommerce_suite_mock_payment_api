@@ -1,0 +1,17 @@
+#%RAML 1.0
+title: ecommerceSuiteMockPayment
+
+/payments:
+  post:
+    body:
+      application/json:
+        properties:
+          amount:
+            type: number
+          paymentToken:
+            type: string
+  /{transactionId}:
+    /status:
+      get:
+    /reversePayment:
+      patch:

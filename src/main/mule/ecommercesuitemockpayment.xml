@@ -3,9 +3,9 @@
     <http:listener-config name="ecommercesuitemockpayment-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${http.port}" />
     </http:listener-config>
-    <apikit:config name="ecommercesuitemockpayment-config" api="resource::297e1185-2a7e-4734-9d69-effb0bb9fbe9:ecommercesuitemockpayment:1.0.0:raml:zip:ecommercesuitemockpayment.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="ecommercesuitemockpayment-config" api="ecommercesuitemockpaymentapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <configuration-properties doc:name="Configuration properties" doc:id="b6df818e-efbe-4cf6-9fdd-97561c931094" file="configuration.properties" />
-	<flow name="ecommercesuitemockpayment-main">
+    <flow name="ecommercesuitemockpayment-main">
         <http:listener config-ref="ecommercesuitemockpayment-httpListenerConfig" path="/payment/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
@@ -124,28 +124,63 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="get:\payments\(transactionId):ecommercesuitemockpayment-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="transactionId">attributes.uriParams.'transactionId'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="get:\payments\(transactionId):ecommercesuitemockpayment-config" />
-    </flow>
     <flow name="post:\payments:application\json:ecommercesuitemockpayment-config">
-        <logger level="INFO" message='#["Initiating Payment"]' />
-		<set-variable value='#["PAY-" ++ uuid()[0 to 7]]' doc:name="transactionId" doc:id="d9b13786-b336-4002-bbaa-4b82e503dc19" variableName="transactionId"/>
-		<round-robin doc:name="Round Robin" doc:id="4fd9bc0b-1a2f-493e-ac09-2a8ce97318b1" >
-			<route >
-				<set-variable value='#["success"]' doc:name="paymentStatus" doc:id="e5e95bcc-3560-4489-ad46-572dd781730e" variableName="paymentStatus"/>
+        <logger level="INFO" message="#[&quot;Initiating Payment&quot;]" />
+        <set-variable value="#[&quot;PAY-&quot; ++ uuid()[0 to 7]]" doc:name="transactionId" doc:id="d9b13786-b336-4002-bbaa-4b82e503dc19" variableName="transactionId" />
+        <round-robin doc:name="Round Robin" doc:id="4fd9bc0b-1a2f-493e-ac09-2a8ce97318b1">
+            <route>
+                <set-variable value="#[&quot;success&quot;]" doc:name="paymentStatus" doc:id="e5e95bcc-3560-4489-ad46-572dd781730e" variableName="paymentStatus" />
+            </route>
+            <route>
+                <set-variable value="#[&quot;failure&quot;]" doc:name="paymentStatus" doc:id="4b8bfdef-da92-4821-8218-86cf9c1b38a5" variableName="paymentStatus" />
+            </route>
+            <route>
+                <set-variable value="#[&quot;pending&quot;]" doc:name="paymentStatus" doc:id="afc40484-6ec3-4481-b331-f42761ff2078" variableName="paymentStatus" />
+            </route>
+        </round-robin>
+        <set-payload value="#[%dw 2.0&#xA;output application/json&#xA;---&#xA;{&#xA; transactionId:vars.transactionId,&#xA; paymentStatus:vars.paymentStatus&#xA;}]" doc:name="Set Payload" doc:id="fade411d-ad48-41de-9d9f-ac0a695c587f" />
+    </flow>
+    <flow name="patch:\payments\(transactionId)\reversePayment:ecommercesuitemockpayment-config">
+        <logger level="INFO" message="#[&quot;Reversing payment transactionId:&quot; ++ attributes.uriParams.transactionId]" />
+        <ee:transform doc:name="Transform Message" doc:id="ba441af2-66af-4c71-8694-f7b0a4ab8426">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Transaction reversed",
+	transactionId:attributes.uriParams.transactionId
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+	<flow name="get:\payments\(transactionId)\status:ecommercesuitemockpayment-config">
+		<logger level="INFO" doc:name="Logger" doc:id="6640270d-029a-467d-ba65-46147bd2a9de" message='#["Fetching payment Status for transactionId:" ++ attributes.uriParams.transactionId]' />
+		<round-robin doc:name="Round Robin" doc:id="bf3ef40c-f0eb-4578-9833-fa9237611a6f">
+			<route>
+				<ee:transform doc:name="Transform Message" doc:id="060518bc-8f7c-4cb8-b350-90b36841e8a7">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	paymentStatus:"pending"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
 			</route>
-			<route >
-				<set-variable value='#["failure"]' doc:name="paymentStatus" doc:id="4b8bfdef-da92-4821-8218-86cf9c1b38a5" variableName="paymentStatus"/>
-			</route>
-			<route >
-				<set-variable value='#["pending"]' doc:name="paymentStatus" doc:id="afc40484-6ec3-4481-b331-f42761ff2078" variableName="paymentStatus"/>
+			<route>
+				<ee:transform doc:name="Transform Message" doc:id="ad7f40ff-de99-4267-a062-ff26bab3a85f">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	paymentStatus:"success"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
 			</route>
 		</round-robin>
-		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	transactionId:vars.transactionId,&#10;	paymentStatus:vars.paymentStatus&#10;}]" doc:name="Set Payload" doc:id="fade411d-ad48-41de-9d9f-ac0a695c587f" />
     </flow>
 </mule>
