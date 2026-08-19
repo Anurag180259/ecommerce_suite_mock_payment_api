@@ -49,13 +49,13 @@
 			<version>1.2.5</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
-		<dependency>
-			<groupId>297e1185-2a7e-4734-9d69-effb0bb9fbe9</groupId>
-			<artifactId>ecommercesuitemockpayment</artifactId>
-			<version>1.0.0</version>
-			<classifier>raml</classifier>
-			<type>zip</type>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>297e1185-2a7e-4734-9d69-effb0bb9fbe9</groupId> -->
+<!-- 			<artifactId>ecommercesuitemockpayment</artifactId> -->
+<!-- 			<version>1.0.0</version> -->
+<!-- 			<classifier>raml</classifier> -->
+<!-- 			<type>zip</type> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>org.mule.modules</groupId>
 			<artifactId>mule-apikit-module</artifactId>
