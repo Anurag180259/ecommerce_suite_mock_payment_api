@@ -32,7 +32,7 @@ Database API     Mock Payment API
                   (This Layer)
         │
         ▼
-   Data Layer (MySQL Database on Aiven Cloud)
+Data Layer (MySQL Database on Aiven Cloud)
 ```
 
 **Role of Mock Payment API:**
